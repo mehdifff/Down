@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دانلودر هوشمند</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f14;--surface:#161a23;--card:#1e2333;--border:#2a3040;
+  --accent:#4f8ef7;--accent2:#7c5cfc;--success:#2ecc71;
+  --warning:#f39c12;--danger:#e74c3c;--text:#e8eaf0;--muted:#7a8299;
+  --radius:14px;
+}
+body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px 16px 60px}
+header{text-align:center;padding:32px 0 28px}
+header h1{font-size:1.7rem;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+header p{color:var(--muted);font-size:.85rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.card-title{font-size:.8rem;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
+input[type=url],input[type=text],input[type=time],input[type=datetime-local]{
+  width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  color:var(--text);font-family:'Vazirmatn',sans-serif;font-size:.9rem;padding:12px 14px;
+  outline:none;transition:border-color .2s;margin-bottom:12px;direction:ltr;text-align:left
+}
+input:focus{border-color:var(--accent)}
+label{display:block;font-size:.82rem;color:var(--muted);margin-bottom:6px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.toggle-row:last-child{border-bottom:none}
+.toggle{position:relative;width:44px;height:24px}
+.toggle input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:var(--border);border-radius:24px;cursor:pointer;transition:.3s}
+.slider::before{content:'';position:absolute;width:18px;height:18px;right:3px;top:3px;background:#fff;border-radius:50%;transition:.3s}
+.toggle input:checked+.slider{background:var(--accent)}
+.toggle input:checked+.slider::before{transform:translateX(-20px)}
+.sched-box{display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.sched-box.show{display:block}
+.btn{width:100%;padding:14px;border:none;border-radius:12px;font-family:'Vazirmatn',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;transition:.2s;margin-bottom:10px}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.queue{display:flex;flex-direction:column;gap:10px}
+.qi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative}
+.qi-name{font-size:.82rem;color:var(--text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:ltr;text-align:left}
+.qi-url{font-size:.72rem;color:var(--muted);margin-bottom:8px;direction:ltr;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{display:inline-block;font-size:.7rem;padding:3px 8px;border-radius:20px;font-weight:500;margin-bottom:8px}
+.b-pending{background:rgba(243,156,18,.15);color:var(--warning)}
+.b-scheduled{background:rgba(79,142,247,.15);color:var(--accent)}
+.b-extracting{background:rgba(124,92,252,.15);color:var(--accent2)}
+.b-ready{background:rgba(46,204,113,.15);color:var(--success)}
+.b-error{background:rgba(231,76,60,.15);color:var(--danger)}
+.qi-actions{display:flex;gap:8px;margin-top:8px}
+.ib{flex:1;padding:7px;border:none;border-radius:8px;font-family:'Vazirmatn',sans-serif;font-size:.78rem;cursor:pointer;transition:.2s}
+.ib-adm{background:rgba(79,142,247,.15);color:var(--accent)}
+.ib-del{background:rgba(231,76,60,.1);color:var(--danger)}
+.ib-retry{background:rgba(243,156,18,.1);color:var(--warning)}
+.empty{text-align:center;color:var(--muted);font-size:.85rem;padding:30px 0}
+.empty .icon{font-size:2rem;margin-bottom:8px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card);border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:30px;font-size:.85rem;transition:transform .3s;z-index:999;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.clear-btn{font-size:.75rem;color:var(--danger);background:none;border:none;cursor:pointer;font-family:'Vazirmatn',sans-serif}
+.sched-info{font-size:.72rem;color:var(--accent);margin-top:4px}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--accent2);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;margin-left:6px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⬇ دانلودر هوشمند</h1>
+  <p>لینک صفحه رو بده، لینک دانلود رو پیدا میکنم</p>
+</header>
+
+<div class="card">
+  <div class="card-title">دانلود جدید</div>
+
+  <label>لینک صفحه فیلم/سریال</label>
+  <input type="url" id="urlInput" placeholder="https://myf2m.org/..." />
+
+  <label>نام (اختیاری)</label>
+  <input type="text" id="nameInput" placeholder="Breaking Bad S01E01" />
+
+  <div class="toggle-row">
+    <span>⏰ زمان‌بندی</span>
+    <label class="toggle">
+      <input type="checkbox" id="schedToggle" onchange="document.getElementById('schedBox').classList.toggle('show',this.checked)">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="sched-box" id="schedBox">
+    <label>تاریخ و ساعت دانلود</label>
+    <input type="datetime-local" id="schedTime" />
+  </div>
+
+  <button class="btn btn-primary" id="addBtn" onclick="addDownload()">افزودن به صف</button>
+</div>
+
+<div class="card">
+  <div class="section-header">
+    <div class="card-title" style="margin-bottom:0">صف دانلود</div>
+    <button class="clear-btn" onclick="clearAll()">پاک کردن همه</button>
+  </div>
+  <div class="queue" id="queue">
+    <div class="empty"><div class="icon">📭</div>هنوز دانلودی نیست</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';  // same origin
+
+async function addDownload() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) { toast('⚠️ لینک را وارد کنید'); return; }
+
+  const name = document.getElementById('nameInput').value.trim();
+  const scheduled = document.getElementById('schedToggle').checked;
+  const sched_time = scheduled ? document.getElementById('schedTime').value : null;
+
+  if (scheduled && !sched_time) { toast('⚠️ زمان را انتخاب کنید'); return; }
+
+  const btn = document.getElementById('addBtn');
+  btn.disabled = true;
+  btn.textContent = 'در حال افزودن...';
+
+  try {
+    const res = await fetch(`${API}/api/add`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ url, name, sched_time })
+    });
+    const data = await res.json();
+    if (data.error) { toast('❌ ' + data.error); return; }
+
+    document.getElementById('urlInput').value = '';
+    document.getElementById('nameInput').value = '';
+    document.getElementById('schedToggle').checked = false;
+    document.getElementById('schedBox').classList.remove('show');
+
+    toast(scheduled ? '✅ زمان‌بندی شد' : '✅ در حال پردازش...');
+    loadQueue();
+  } catch(e) {
+    toast('❌ خطا در اتصال به سرور');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'افزودن به صف';
+  }
+}
+
+async function loadQueue() {
+  try {
+    const res = await fetch(`${API}/api/list`);
+    const items = await res.json();
+    renderQueue(items);
+  } catch(e) {}
+}
+
+function renderQueue(items) {
+  const el = document.getElementById('queue');
+  if (!items || items.length === 0) {
+    el.innerHTML = '<div class="empty"><div class="icon">📭</div>هنوز دانلودی نیست</div>';
+    return;
+  }
+
+  const statusMap = {
+    pending:    ['در انتظار',     'b-pending'],
+    scheduled:  ['زمان‌بندی شده', 'b-scheduled'],
+    extracting: ['در حال پردازش','b-extracting'],
+    ready:      ['آماده',         'b-ready'],
+    error:      ['خطا',           'b-error'],
+  };
+
+  el.innerHTML = items.map(item => {
+    const [label, cls] = statusMap[item.status] || ['نامشخص', ''];
+    const spinner = item.status === 'extracting' ? '<span class="spinner"></span>' : '';
+    const schedInfo = item.sched_time
+      ? `<div class="sched-info">⏰ ${item.sched_time.replace('T',' ')}</div>` : '';
+    const errorInfo = item.error
+      ? `<div style="font-size:.72rem;color:var(--danger);margin-top:4px">${item.error}</div>` : '';
+
+    const admBtn = item.direct_url
+      ? `<button class="ib ib-adm" onclick="sendToADM('${item.direct_url}','${(item.name||'').replace(/'/g,'')}')" >📤 ارسال به ADM</button>`
+      : '';
+    const retryBtn = item.status === 'error'
+      ? `<button class="ib ib-retry" onclick="retry(${item.id})">🔄 تلاش مجدد</button>` : '';
+
+    return `
+      <div class="qi">
+        <div class="qi-name">${item.name || item.url.split('/').pop() || 'دانلود'}</div>
+        <div class="qi-url">${item.url}</div>
+        <span class="badge ${cls}">${label}${spinner}</span>
+        ${schedInfo}${errorInfo}
+        <div class="qi-actions">
+          ${admBtn}${retryBtn}
+          <button class="ib ib-del" onclick="del(${item.id})">🗑</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function sendToADM(url, name) {
+  // Try ADM intent
+  const intent = `intent:${url}#Intent;action=android.intent.action.VIEW;package=com.dv.adm;S.title=${encodeURIComponent(name)};end`;
+  window.location.href = intent;
+  toast('📤 در حال ارسال به ADM...');
+}
+
+async function del(id) {
+  await fetch(`${API}/api/delete/${id}`, {method:'DELETE'});
+  toast('🗑 حذف شد');
+  loadQueue();
+}
+
+async function retry(id) {
+  await fetch(`${API}/api/retry/${id}`, {method:'POST'});
+  toast('🔄 در حال تلاش مجدد...');
+  loadQueue();
+}
+
+async function clearAll() {
+  const items = await (await fetch(`${API}/api/list`)).json();
+  await Promise.all(items.map(i => fetch(`${API}/api/delete/${i.id}`, {method:'DELETE'})));
+  toast('🗑 همه پاک شد');
+  loadQueue();
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// Auto-refresh every 3 seconds for live status updates
+loadQueue();
+setInterval(loadQueue, 3000);
+</script>
+</body>
+</html>
